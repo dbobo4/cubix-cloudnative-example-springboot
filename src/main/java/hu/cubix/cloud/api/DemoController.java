@@ -31,3 +31,30 @@ public class DemoController {
     }
 
 }
+
+// Python FastAPI code:
+// from fastapi import FastAPI, Query
+// from pydantic import BaseModel
+// from datetime import date, datetime
+
+// app = FastAPI()
+
+// default_message = "Hello Cloud-native students!"
+
+
+// class DemoResponse(BaseModel):
+//     date: date
+//     time: str
+//     message: str
+
+
+// @app.get("/message", response_model=DemoResponse)
+// def demo_message(message: str | None = Query(default=None)):
+//     if message is None or not message.strip():
+//         message = default_message
+
+//     return DemoResponse(
+//         date=date.today(),
+//         time=datetime.now().time().isoformat(timespec="seconds"),
+//         message=message
+//     )
