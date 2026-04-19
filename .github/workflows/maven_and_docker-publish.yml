@@ -57,10 +57,68 @@ jobs:
           path: . # a workspace gyökerébe teszi le (“ide kerüljön a .jar, hogy a Dockerfile lássa”)
 
       - name: Logging in to Docker registry # belép a GitHub Container Registry-be (“hitelesítsd magad, hogy tudj image-et pusholni”)
+        # ghcr.io = GitHub Container Registry
+        # ez a GitHub konténer image tárhelye / registryje
+        # ide lehet Docker image-eket feltölteni, hasonlóan ahhoz,
+        # ahogy a Maven package-eket GitHub Packages-be töltöd fel
+        #
+        # a "container registry" egyszerűen egy olyan távoli tárhely,
+        # ahol konténer image-eket tárolnak és ahonnan le lehet őket tölteni
+        #
+        # nagyon egyszerűen:
+        # - Maven package registry -> .jar / package tárolás
+        # - container registry     -> Docker image tárolás
+        #
+        # itt a workflow nem egy GitHubon már futó dockerbe "nyúl bele",
+        # hanem a GitHub Actions runneren futó Docker klienssel
+        # belép a GitHub távoli image tárhelyére
+        #
+        # tehát:
+        # - a runneren helyben buildel image-et
+        # - majd azt a kész image-et feltolja a ghcr.io-ra
+        #
+        # -u dbobo4              -> ezzel a GitHub userrel azonosítja magát
+        # -p ${{ github.token }} -> ezzel a tokennel hitelesít
         run: docker login ghcr.io -u dbobo4 -p ${{ github.token }}
 
       - name: Build the Docker image # Docker image-et épít a letöltött .jar-ból (“csinálj konténer image-et az alkalmazásból”)
+        # docker build
+        # -> helyben, a GitHub Actions runner gépén épít egy Docker image-et
+        #
+        # . 
+        # -> a jelenlegi mappa a build context
+        # -> innen látja a Docker a fájlokat, például a letöltött .jar-t és a Dockerfile-t
+        #
+        # --file Dockerfile
+        # -> ezt a Dockerfile-t használd az image építéséhez
+        #
+        # --tag ghcr.io/dbobo4/cubix/cloudnative/demo:actions
+        # -> ez lesz az image teljes neve
+        # -> ebben benne van:
+        #    ghcr.io                         = melyik registrybe szánjuk
+        #    dbobo4/cubix/cloudnative/demo  = a repository / image útvonala
+        #    actions                        = a tag, vagyis a verzió/jelölés
+        #
+        # nagyon egyszerűen:
+        # itt még nem feltöltés történik, hanem maga az image elkészítése
+        # a GitHub runner gépén
         run: docker build . --file Dockerfile --tag ghcr.io/dbobo4/cubix/cloudnative/demo:actions
 
       - name: Publishing the Docker image # feltolja az image-et a registrybe (“tedd fel a kész Docker image-et a ghcr.io-ra”)
+        # docker push
+        # -> a már elkészített helyi image-et feltolja a távoli registrybe
+        #
+        # tehát itt történik az, hogy a runneren megépített Docker image
+        # felkerül a GitHub Container Registry-be
+        #
+        # nagyon egyszerűen:
+        # build = elkészítés
+        # push  = feltöltés
+        #
+        # ezután a ghcr.io/... név alatt más gépről is le lehet húzni ezt az image-et,
+        # például:
+        # docker pull ghcr.io/dbobo4/cubix/cloudnative/demo:actions
+        #
+        # tehát nem egy futó GitHubos konténerbe nyúl bele,
+        # hanem egy távoli image tárhelyre tölti fel a kész konténer image-et
         run: docker push ghcr.io/dbobo4/cubix/cloudnative/demo:actions
